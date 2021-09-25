@@ -19,6 +19,8 @@ var noise2: OpenSimplexNoise
 var material: Material
 var point_heights = {}
 
+onready var player = $PlayerController/Player
+
 
 func _ready() -> void:
     material = load("res://material.tres")
@@ -26,10 +28,19 @@ func _ready() -> void:
     randomize()
     _generate()
 
+    DebugConsole.connect("command_submitted", self, "_on_debug_cmd")
+
 
 func _process(delta: float) -> void:
     if Input.is_action_just_pressed("ui_end"):
         _generate()
+
+
+func _on_debug_cmd(cmd: String, args: String) -> void:
+    if cmd == "gen":
+        _generate()
+    elif cmd == "pos":
+        player.transform.origin = Vector3(map_size * square_size / 2, 100, map_size * square_size / 2)
 
 
 func _generate() -> void:
@@ -40,6 +51,13 @@ func _generate() -> void:
     max_height = 100
     map_bottom = -30
     center = Vector2(map_size / 2.0, map_size / 2.0)
+
+    DebugConsole.fix_message("Map Size", "%s" % map_size)
+    DebugConsole.fix_message("Map Extra", "%s" % map_extra)
+    DebugConsole.fix_message("Square Size", "%s" % square_size)
+    DebugConsole.fix_message("Min Height", "%s" % min_height)
+    DebugConsole.fix_message("Max Height", "%s" % max_height)
+    DebugConsole.fix_message("Map Bottom", "%s" % map_bottom)
 
     noise = OpenSimplexNoise.new()
     noise.seed = randi()
@@ -52,6 +70,13 @@ func _generate() -> void:
     noise2.octaves = 9
     #noise2.persistence = rand_range(0.25, 0.75)
     noise2.persistence = 0.5
+
+    DebugConsole.fix_message("Base Noise Seed", noise.seed)
+    DebugConsole.fix_message("Base Noise Octaves", noise.octaves)
+    DebugConsole.fix_message("Base Noise Persistence", noise.persistence)
+    DebugConsole.fix_message("Added Noise Seed", noise2.seed)
+    DebugConsole.fix_message("Added Noise Octaves", noise2.octaves)
+    DebugConsole.fix_message("Added Noise Persistence", noise2.persistence)
 
     var texture_size = map_size
     var t = ImageTexture.new()
@@ -145,7 +170,7 @@ func _build_array_mesh() -> void:
 
     ResourceSaver.save("res://saved_mesh.tres", array_mesh)
 
-    $Player.translation = Vector3(map_size * square_size / 2, heights.max() + 10, map_size * square_size / 2)
+    player.translation = Vector3(map_size * square_size / 2, 100, map_size * square_size / 2)
 
 
 func _get_noise_value(x: float, z: float) -> float:
