@@ -1,0 +1,58 @@
+[gd_resource type="ShaderMaterial" load_steps=4 format=2]
+
+[sub_resource type="Shader" id=2]
+code = "shader_type spatial;
+
+uniform vec4 color : hint_color = vec4(1.0);
+uniform float move : hint_range(0, 1) = 0.5;
+
+varying float transparent;
+
+void vertex() {
+    VERTEX.y = VERTEX.y <= 1.0 ? 1.0 + (sin(TIME + VERTEX.x + VERTEX.z) * move) : 0.0;
+}
+
+void fragment() {
+    ALBEDO = vec3(color.r, color.g, color.b);
+    ALPHA = color.a;
+}"
+
+[sub_resource type="ShaderMaterial" id=3]
+shader = SubResource( 2 )
+shader_param/color = Color( 0.0941176, 0.313726, 0.701961, 0.654902 )
+shader_param/move = 0.5
+
+[sub_resource type="Shader" id=1]
+code = "shader_type spatial;
+
+uniform vec4 color : hint_color;
+
+varying vec3 actual_color;
+
+void vertex() {
+    actual_color = vec3(color.r, color.g, color.b);
+    if (VERTEX.y > 30.0) {
+        actual_color += vec3(0.4);
+    }
+    else if (VERTEX.y > 20.0) {
+        actual_color += vec3(0.3);
+    }
+    else if (VERTEX.y > 10.0) {
+        actual_color += vec3(0.2);
+    }
+    else if (VERTEX.y > 1.0) {
+        actual_color += vec3(0.1);
+    }
+    else if (VERTEX.y < 1.0) {
+        actual_color = vec3(.3);
+    }
+}
+
+void fragment() {
+    ALBEDO = actual_color;
+}"
+
+[resource]
+next_pass = SubResource( 3 )
+shader = SubResource( 1 )
+shader_param/color = Color( 0.215686, 0.380392, 0.243137, 1 )
