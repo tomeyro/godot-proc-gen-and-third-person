@@ -9,6 +9,7 @@ export var max_fall_speed: float = 50
 export var jump_force: float = 20
 
 export var targetable_distance: float = 40
+export var hold_to_unlock: float = 0.5
 
 export var mouse_sensitivity: float = .3
 
@@ -28,6 +29,7 @@ var y_velocity: float = 0
 var on_screen_targets: Array = []
 var targetable_targets: Array = []
 var locked_target: Spatial
+var unlock_timer: Timer
 
 
 func _ready() -> void:
@@ -35,6 +37,10 @@ func _ready() -> void:
 
     TargetableSignals.connect("targetable_on_screen", self, "_on_targetable_on_screen")
     TargetableSignals.connect("targetable_off_screen", self, "_on_targetable_off_screen")
+
+    unlock_timer = Timer.new()
+    unlock_timer.connect("timeout", self, "_unlock_target")
+    add_child(unlock_timer)
 
 
 func _process(_delta: float) -> void:
@@ -46,6 +52,10 @@ func _process(_delta: float) -> void:
 
     elif Input.is_action_just_pressed("lock_target"):
         _lock_on_next_target()
+        unlock_timer.one_shot = true
+        unlock_timer.start(hold_to_unlock)
+    elif Input.is_action_just_released("lock_target"):
+        unlock_timer.stop()
 
 
 func _input(event: InputEvent) -> void:
