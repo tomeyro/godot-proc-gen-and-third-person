@@ -8,6 +8,16 @@
 
 config_version=4
 
+_global_script_classes=[ {
+"base": "Spatial",
+"class": "ProceduralIsland",
+"language": "GDScript",
+"path": "res://ProceduralIsland.gd"
+} ]
+_global_script_class_icons={
+"ProceduralIsland": ""
+}
+
 [application]
 
 config/name="ProcGenTest"

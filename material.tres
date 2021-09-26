@@ -1,6 +1,6 @@
 [gd_resource type="ShaderMaterial" load_steps=4 format=2]
 
-[sub_resource type="Shader" id=2]
+[sub_resource type="Shader" id=1]
 code = "shader_type spatial;
 
 uniform vec4 color : hint_color = vec4(1.0);
@@ -17,12 +17,12 @@ void fragment() {
     ALPHA = color.a;
 }"
 
-[sub_resource type="ShaderMaterial" id=3]
-shader = SubResource( 2 )
+[sub_resource type="ShaderMaterial" id=2]
+shader = SubResource( 1 )
 shader_param/color = Color( 0.0941176, 0.313726, 0.701961, 0.654902 )
 shader_param/move = 0.5
 
-[sub_resource type="Shader" id=1]
+[sub_resource type="Shader" id=3]
 code = "shader_type spatial;
 
 uniform vec4 color : hint_color;
@@ -53,6 +53,6 @@ void fragment() {
 }"
 
 [resource]
-next_pass = SubResource( 3 )
-shader = SubResource( 1 )
+next_pass = SubResource( 2 )
+shader = SubResource( 3 )
 shader_param/color = Color( 0.215686, 0.380392, 0.243137, 1 )
