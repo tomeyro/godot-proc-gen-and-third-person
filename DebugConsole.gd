@@ -84,7 +84,7 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
-    fix_message("FPS", "%.2f" % ((1.0 / delta) if not is_zero_approx(delta) else 0))
+    fix_message("FPS", "%.2f" % ((1.0 / delta) if not is_zero_approx(delta) else 0.0))
 
     var viewport_size = get_viewport().size
     console_bg.rect_size = Vector2(viewport_size.x, console_height)
@@ -102,6 +102,10 @@ func _input(event: InputEvent) -> void:
         match event.scancode:
             KEY_F9:
                 console.visible = !console.visible
+                if console.visible:
+                    command_line.grab_focus()
+                else:
+                    command_line_focused = false
             KEY_ENTER:
                 _submit_command()
             KEY_UP:
@@ -155,7 +159,7 @@ func _on_command_line_unfocused() -> void:
 
 
 func _submit_command() -> void:
-    if not command_line_focused:
+    if not command_line_focused or not console.visible:
         return
 
     var cmd = command_line.text.strip_edges()
@@ -193,7 +197,7 @@ func _add_command_to_history(cmd_line: String) -> void:
 
 
 func _get_command_from_history(add_idx: int) -> void:
-    if not command_line_focused:
+    if not command_line_focused or not console.visible:
         return
     command_history_idx = min(max(command_history_idx + add_idx, -1), len(command_history_list) - 1)
     if command_history_idx < 0:
