@@ -9,6 +9,10 @@ func _ready() -> void:
     DebugConsole.register_object("world", self)
     DebugConsole.register_object("player", player)
 
+    DebugConsole.add_help(
+        "world.generate_island(size: float, square_size: float, max_height: float, min_height: float)",
+        "Regenerate the island with the given values. All values are optional. If 0 is passed in any value, the current value will be kept.")
+
     generate_island()
 
 
