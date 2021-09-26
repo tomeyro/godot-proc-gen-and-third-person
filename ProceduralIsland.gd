@@ -37,7 +37,7 @@ func generate() -> void:
     noise2.seed = randi()
     noise2.octaves = 9
     #noise2.persistence = rand_range(0.25, 0.75)
-    noise2.persistence = 0.75
+    noise2.persistence = 0.5
 
     DebugConsole.command_output(
         "Map Generated:\n" +
