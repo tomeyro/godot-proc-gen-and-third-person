@@ -2,91 +2,97 @@
 
 [ext_resource path="res://DebugConsole.gd" type="Script" id=1]
 
-[node name="DebugConsole" type="Control"]
-anchor_right = 1.0
-anchor_bottom = 1.0
-focus_mode = 2
+[node name="DebugConsole" type="CanvasLayer"]
+pause_mode = 2
+layer = 128
 script = ExtResource( 1 )
+
+[node name="Console" type="Control" parent="."]
+margin_right = 40.0
+margin_bottom = 40.0
 __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="Background" type="ColorRect" parent="."]
-margin_top = 350.0
+[node name="Background" type="ColorRect" parent="Console"]
 margin_right = 1024.0
-margin_bottom = 600.0
+margin_bottom = 250.0
 color = Color( 0, 0, 0, 0.376471 )
 __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="MainContainer" type="VBoxContainer" parent="."]
-margin_left = 12.0
-margin_top = 360.0
-margin_right = 1012.0
-margin_bottom = 590.0
+[node name="MainContainer" type="VBoxContainer" parent="Console"]
+margin_right = 1024.0
+margin_bottom = 250.0
 alignment = 2
 __meta__ = {
+"_edit_group_": true,
 "_edit_use_anchors_": false
 }
 
-[node name="OutputContainer" type="HBoxContainer" parent="MainContainer"]
-margin_top = 2.0
-margin_right = 1000.0
-margin_bottom = 202.0
+[node name="OutputContainer" type="HBoxContainer" parent="Console/MainContainer"]
+margin_right = 1024.0
+margin_bottom = 222.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
 custom_constants/separation = 0
 
-[node name="LiveContainer" type="ScrollContainer" parent="MainContainer/OutputContainer"]
-margin_right = 500.0
-margin_bottom = 200.0
-rect_min_size = Vector2( 500, 200 )
+[node name="LiveContainer" type="ScrollContainer" parent="Console/MainContainer/OutputContainer"]
+margin_right = 512.0
+margin_bottom = 222.0
+size_flags_horizontal = 3
 scroll_horizontal_enabled = false
 
-[node name="TextContainer" type="VBoxContainer" parent="MainContainer/OutputContainer/LiveContainer"]
-margin_right = 500.0
-margin_bottom = 200.0
+[node name="TextContainer" type="VBoxContainer" parent="Console/MainContainer/OutputContainer/LiveContainer"]
+margin_right = 512.0
+margin_bottom = 222.0
 grow_vertical = 0
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
-[node name="Label" type="Label" parent="MainContainer/OutputContainer/LiveContainer/TextContainer"]
-margin_right = 500.0
+[node name="Label" type="Label" parent="Console/MainContainer/OutputContainer/LiveContainer/TextContainer"]
+margin_right = 512.0
 margin_bottom = 14.0
 size_flags_horizontal = 3
 text = "> Label"
 autowrap = true
 
-[node name="FixedContainer" type="ScrollContainer" parent="MainContainer/OutputContainer"]
-margin_left = 500.0
-margin_right = 1000.0
-margin_bottom = 200.0
+[node name="FixedContainer" type="ScrollContainer" parent="Console/MainContainer/OutputContainer"]
+margin_left = 512.0
+margin_right = 1024.0
+margin_bottom = 222.0
 rect_min_size = Vector2( 500, 0 )
+size_flags_horizontal = 3
+size_flags_vertical = 3
 scroll_horizontal_enabled = false
 
-[node name="TextContainer" type="VBoxContainer" parent="MainContainer/OutputContainer/FixedContainer"]
-margin_right = 500.0
-margin_bottom = 200.0
+[node name="TextContainer" type="VBoxContainer" parent="Console/MainContainer/OutputContainer/FixedContainer"]
+margin_right = 512.0
+margin_bottom = 222.0
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
-[node name="InputContainer" type="HBoxContainer" parent="MainContainer"]
-margin_top = 206.0
-margin_right = 1000.0
-margin_bottom = 230.0
+[node name="InputContainer" type="HBoxContainer" parent="Console/MainContainer"]
+margin_top = 226.0
+margin_right = 1024.0
+margin_bottom = 250.0
 
-[node name="CommandLine" type="LineEdit" parent="MainContainer/InputContainer"]
-margin_right = 893.0
+[node name="CommandLine" type="LineEdit" parent="Console/MainContainer/InputContainer"]
+margin_right = 917.0
 margin_bottom = 24.0
 size_flags_horizontal = 3
+caret_blink = true
+caret_blink_speed = 0.5
 
-[node name="SendButton" type="Button" parent="MainContainer/InputContainer"]
-margin_left = 897.0
-margin_right = 943.0
+[node name="SendButton" type="Button" parent="Console/MainContainer/InputContainer"]
+margin_left = 921.0
+margin_right = 967.0
 margin_bottom = 24.0
 text = "SEND"
 
-[node name="PauseButton" type="Button" parent="MainContainer/InputContainer"]
-margin_left = 947.0
-margin_right = 1000.0
+[node name="PauseButton" type="Button" parent="Console/MainContainer/InputContainer"]
+margin_left = 971.0
+margin_right = 1024.0
 margin_bottom = 24.0
 text = "PAUSE"

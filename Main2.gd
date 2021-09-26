@@ -28,19 +28,13 @@ func _ready() -> void:
     randomize()
     _generate()
 
-    DebugConsole.connect("command_submitted", self, "_on_debug_cmd")
+    DebugConsole.register_object("world", self)
+    DebugConsole.register_object("player", player)
 
 
 func _process(delta: float) -> void:
     if Input.is_action_just_pressed("ui_end"):
         _generate()
-
-
-func _on_debug_cmd(cmd: String, args: String) -> void:
-    if cmd == "gen":
-        _generate()
-    elif cmd == "pos":
-        player.transform.origin = Vector3(map_size * square_size / 2, 100, map_size * square_size / 2)
 
 
 func _generate() -> void:
@@ -52,12 +46,12 @@ func _generate() -> void:
     map_bottom = -30
     center = Vector2(map_size / 2.0, map_size / 2.0)
 
-    DebugConsole.fix_message("Map Size", "%s" % map_size)
-    DebugConsole.fix_message("Map Extra", "%s" % map_extra)
-    DebugConsole.fix_message("Square Size", "%s" % square_size)
-    DebugConsole.fix_message("Min Height", "%s" % min_height)
-    DebugConsole.fix_message("Max Height", "%s" % max_height)
-    DebugConsole.fix_message("Map Bottom", "%s" % map_bottom)
+    DebugConsole.fix_message("Map Size", map_size)
+    DebugConsole.fix_message("Map Extra", map_extra)
+    DebugConsole.fix_message("Square Size", square_size)
+    DebugConsole.fix_message("Min Height", min_height)
+    DebugConsole.fix_message("Max Height", max_height)
+    DebugConsole.fix_message("Map Bottom", map_bottom)
 
     noise = OpenSimplexNoise.new()
     noise.seed = randi()
@@ -168,7 +162,7 @@ func _build_array_mesh() -> void:
 
     mesh_shape.shape = array_mesh.create_trimesh_shape()
 
-    ResourceSaver.save("res://saved_mesh.tres", array_mesh)
+    #ResourceSaver.save("res://saved_mesh.tres", array_mesh)
 
     player.translation = Vector3(map_size * square_size / 2, 100, map_size * square_size / 2)
 

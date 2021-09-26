@@ -1,68 +1,113 @@
-extends Control
+extends CanvasLayer
 
 
-# Emmited when a new command is submitted in the terminal.
-signal command_submitted(cmd, args)
+enum POSITIONS {
+    top,
+    bottom,
+}
 
 
+export(POSITIONS) var show: int = POSITIONS.top
 export var log_history: float = 250
-export var trigger_action: String = "debug_toggle"
 export var command_history: float = 250
-export var command_submit_action: String = "debug_submit_command"
 
 
-onready var label: Label = $MainContainer/OutputContainer/LiveContainer/TextContainer/Label
+onready var console: Control = $Console
+onready var console_bg: Control = $Console/Background
+onready var console_container: Control = $Console/MainContainer
 
-onready var live_text_scroll: ScrollContainer = $MainContainer/OutputContainer/LiveContainer
-onready var live_text_container: VBoxContainer = $MainContainer/OutputContainer/LiveContainer/TextContainer
-onready var fixed_text_scroll: ScrollContainer = $MainContainer/OutputContainer/FixedContainer
-onready var fixed_text_container: VBoxContainer = $MainContainer/OutputContainer/FixedContainer/TextContainer
+onready var label: Label = $Console/MainContainer/OutputContainer/LiveContainer/TextContainer/Label
 
-onready var command_line: LineEdit = $MainContainer/InputContainer/CommandLine
+onready var live_text_scroll: ScrollContainer = $Console/MainContainer/OutputContainer/LiveContainer
+onready var live_text_container: VBoxContainer = $Console/MainContainer/OutputContainer/LiveContainer/TextContainer
+onready var fixed_text_scroll: ScrollContainer = $Console/MainContainer/OutputContainer/FixedContainer
+onready var fixed_text_container: VBoxContainer = $Console/MainContainer/OutputContainer/FixedContainer/TextContainer
 
-onready var send_btn: Button = $MainContainer/InputContainer/SendButton
-onready var pause_btn: Button = $MainContainer/InputContainer/PauseButton
+onready var command_line: LineEdit = $Console/MainContainer/InputContainer/CommandLine
 
+onready var send_btn: Button = $Console/MainContainer/InputContainer/SendButton
+onready var pause_btn: Button = $Console/MainContainer/InputContainer/PauseButton
+
+
+var _registered_objects = {}
 
 var fixed_messages: Dictionary = {}
+
 var live_paused: bool = false
+
 var command_line_focused: bool = false
 var command_history_list: Array = []
 var command_history_idx: int = -1
 
+var console_height: float
+
+# This list is printed using the help() command on the console.
+# Use add_help to add additional messages to this list.
+var _help = [
+    "help() -> Show this message.",
+    "clear() -> Clear the live console (left side).",
+    "clear_fixed() -> Clear the fixed console (right side).",
+    "exit() -> Exit the game.",
+    "pause() -> Pause the live console.",
+    "resume() -> Resume the live console.",
+    "top() -> Move console to the top of the screen.",
+    "bottom() -> Move console to the bottom of the screen.",
+    "bigger([val: Float]) -> Increase the height of the console. Optionally pass the value you want to increase.",
+    "smaller([val: Float]) -> Decrease the height of the console. Optionally pass the value you want to decrease.",
+    "height(val: Float) -> Set a specific height for the console. If no value is passed, the current value is printed.",
+    "register_object(key: String, obj) -> Register a new object to be accessible from the console (use DebugConsole.register_console programatically).",
+    "add_help(command: String, help_msg: String) -> Add an additional message to this help list (use DebugConsole.add_help programatically).",
+]
+
 
 func _ready() -> void:
-    visible = false
+    # To test the debug console, add the DebugConsole.tscn scene in Project Settings > Autoload.
+    if self != DebugConsole:
+        queue_free()
+        return
+
+    console.visible = false
 
     live_text_container.remove_child(label)
 
-    connect("command_submitted", self, "_on_command_submitted")
-
-    send_btn.connect("pressed", self, "submit_command")
-    pause_btn.connect("pressed", self, "toggle_pause_live")
+    send_btn.connect("pressed", self, "_submit_command")
+    pause_btn.connect("pressed", self, "_toggle_pause_live")
 
     command_line.connect("focus_entered", self, "_on_command_line_focused")
     command_line.connect("focus_exited", self, "_on_command_line_unfocused")
 
     fix_message("FPS", 0.0)
     welcome_message()
+    command_line.grab_focus()
+
+    console_height = get_viewport().size.y / 2
 
 
 func _process(delta: float) -> void:
-    if Input.is_action_just_pressed(trigger_action):
-        visible = !visible
-        if visible:
-            command_line.grab_focus()
-
     fix_message("FPS", "%.2f" % ((1.0 / delta) if not is_zero_approx(delta) else 0))
 
-    if command_line_focused:
-        if Input.is_action_just_pressed(command_submit_action):
-            submit_command()
-        elif Input.is_action_just_pressed("ui_down"):
-            _get_next_command_from_history()
-        elif Input.is_action_just_pressed("ui_up"):
-            _get_previous_command_from_history()
+    var viewport_size = get_viewport().size
+    console_bg.rect_size = Vector2(viewport_size.x, console_height)
+    console_container.rect_size = Vector2(viewport_size.x, console_height)
+    if show == POSITIONS.top:
+        console.rect_position = Vector2.ZERO
+    else:
+        console.rect_position = Vector2(0, viewport_size.y - console_height)
+    if console_height > (viewport_size.y - 15):
+        height(viewport_size.y)
+
+
+func _input(event: InputEvent) -> void:
+    if event is InputEventKey and event.pressed:
+        match event.scancode:
+            KEY_F9:
+                console.visible = !console.visible
+            KEY_ENTER:
+                _submit_command()
+            KEY_UP:
+                _get_previous_command_from_history()
+            KEY_DOWN:
+                _get_next_command_from_history()
 
 
 # Live Messages Methods
@@ -78,24 +123,11 @@ func log_message(msg, force: bool = false) -> void:
         live_text_container.get_children()[0].free()
     # Wait for next frame so the scroll container is actually resized.
     yield(get_tree(), "idle_frame")
-    live_text_scroll.scroll_vertical = 9999999
+    live_text_scroll.scroll_vertical = 99999999
 
 
-func toggle_pause_live() -> void:
+func _toggle_pause_live() -> void:
     live_paused = !live_paused
-
-
-func pause_live() -> void:
-    live_paused = true
-
-
-func unpause_live() -> void:
-    live_paused = false
-
-
-func welcome_message() -> void:
-    command_output("Welcome to Godot's Debug Terminal :)")
-    command_output("====================================")
 
 
 # Fixed Messages Methods
@@ -114,7 +146,6 @@ func fix_message(key: String, msg) -> void:
 # Command Line Methods
 
 
-
 func _on_command_line_focused() -> void:
     command_line_focused = true
 
@@ -123,19 +154,33 @@ func _on_command_line_unfocused() -> void:
     command_line_focused = true
 
 
-func submit_command() -> void:
-    var cmd_line = command_line.text.strip_edges()
-    if not cmd_line or cmd_line == "":
-        command_line.text = ""
-        command_line.grab_focus()
+func _submit_command() -> void:
+    if not command_line_focused:
         return
-    log_message('$ %s' % cmd_line, true)
-    var cmd = cmd_line.split(" ", true, 1)[0].to_lower()
-    var args = cmd_line.split(" ", true, 1)[1] if " " in cmd_line else ""
-    emit_signal("command_submitted", cmd, args)
+
+    var cmd = command_line.text.strip_edges()
     command_line.text = ""
     command_line.grab_focus()
-    _add_command_to_history(cmd_line)
+
+    if not cmd or cmd == "":
+        return
+
+    log_message("$ %s" % cmd, true)
+    _add_command_to_history(cmd)
+
+    var expr = Expression.new()
+    expr.parse(cmd, PoolStringArray(_registered_objects.keys()))
+    var res = expr.execute(_registered_objects.values(), self)
+
+    if expr.has_execute_failed():
+        log_message("! ERROR: %s" % expr.get_error_text(), true)
+
+    if res != null:
+        command_output(res)
+
+
+func command_output(output) -> void:
+    log_message("> %s" % output, true)
 
 
 func _add_command_to_history(cmd_line: String) -> void:
@@ -148,6 +193,8 @@ func _add_command_to_history(cmd_line: String) -> void:
 
 
 func _get_command_from_history(add_idx: int) -> void:
+    if not command_line_focused:
+        return
     command_history_idx = min(max(command_history_idx + add_idx, -1), len(command_history_list) - 1)
     if command_history_idx < 0:
         command_line.text = ""
@@ -163,38 +210,29 @@ func _get_next_command_from_history() -> void:
     _get_command_from_history(-1)
 
 
+func register_object(key: String, object) -> void:
+    # Registered objects will be accessible on the console using the specified key.
+    # For example if you call: register_object('player', Player)
+    # You can then access Player methods on the console by calling: player.method()
+    _registered_objects[key.replace(" ", "_").strip_edges()] = object
+
+
 # Default Commands
 
 
-func command_output(output: String) -> void:
-    log_message('> %s' % output, true)
+func welcome_message() -> void:
+    command_output("Welcome to Godot's Debug Console :)")
+    command_output("Call help() to see more commands.")
+    command_output("====================================")
 
 
-func _on_command_submitted(cmd: String, args: String) -> void:
-    var cmd_method = "_do_%s" % cmd
-    if has_method(cmd_method):
-        call(cmd_method, args)
-
-
-func _do_echo(args: String) -> void:
-    command_output(args)
-
-
-func _do_fix(args: String) -> void:
-    var split_args = args.split(" ", true, 1)
-    if len(split_args) != 2:
-        command_output("ERROR: Incorrect syntax. Expected: \"fix {key} {msg}\"")
-        return
-    fix_message(split_args[0], split_args[1])
-
-
-func _do_clear(_args: String) -> void:
+func clear() -> void:
     for free_label in live_text_container.get_children():
         free_label.free()
     welcome_message()
 
 
-func _do_clear_fixed(_args: String) -> void:
+func clear_fixed() -> void:
     var copy_dict = {}
     for key in fixed_messages:
         copy_dict[key] = fixed_messages[key]
@@ -203,17 +241,51 @@ func _do_clear_fixed(_args: String) -> void:
         copy_dict[key].free()
 
 
-func _do_quit_game(_args: String) -> void:
+func exit() -> void:
     get_tree().quit()
 
 
-func _do_p(_args: String) -> void:
-    toggle_pause_live()
-    command_output("Live log paused." if live_paused else "Live log resumed.")
+func pause() -> void:
+    live_paused = true
+    command_output("Live console paused.")
 
 
-func _do_eval(args: String) -> void:
-    var expr = Expression.new()
-    expr.parse(args)
-    var res = expr.execute()
-    command_output("ERROR" if expr.has_execute_failed() else ("%s" % res))
+func resume() -> void:
+    live_paused = false
+    command_output("Live console resumed.")
+
+
+func top() -> void:
+    show = POSITIONS.top
+
+
+func bottom() -> void:
+    show = POSITIONS.bottom
+
+
+func bigger(increase: float = 10) -> void:
+    height(max(console_height + increase, 0))
+
+
+func smaller(decrease: float = 10) -> void:
+    height(max(console_height - decrease, 0))
+
+
+func height(value: float = -1) -> void:
+    if value < 0:
+        command_output("Current_height: %.2f" % console_container.rect_size.y)
+        return
+    console_height = min(max(value, 45), get_viewport().size.y - 15)
+
+
+func help() -> void:
+    var full_msg = ""
+    for help_msg in _help:
+        full_msg += "· %s\n" % help_msg
+    if _registered_objects:
+        full_msg += "· Registered objects: %s\n" % [_registered_objects.keys()]
+    log_message(full_msg, true)
+
+
+func add_help(method: String, help_msg: String) -> void:
+    _help.append("%s -> %s" % [method.strip_edges(), help_msg.strip_edges()])
