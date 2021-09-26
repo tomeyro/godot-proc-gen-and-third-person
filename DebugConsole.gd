@@ -7,7 +7,7 @@ enum POSITIONS {
 }
 
 
-export(POSITIONS) var show: int = POSITIONS.top
+export(POSITIONS) var show: int = POSITIONS.bottom
 export var log_history: float = 250
 export var command_history: float = 250
 
@@ -101,6 +101,9 @@ func _input(event: InputEvent) -> void:
     if event is InputEventKey and event.pressed:
         match event.scancode:
             KEY_F9:
+                if Input.is_key_pressed(KEY_CONTROL):
+                    command_line.editable = !command_line.editable
+                    continue
                 console.visible = !console.visible
                 if console.visible:
                     command_line.grab_focus()
@@ -121,7 +124,7 @@ func log_message(msg, force: bool = false) -> void:
     if live_paused and not force:
         return
     var new_label = label.duplicate()
-    new_label.text = "%s" % msg
+    new_label.text = "%s" % str(msg)
     live_text_container.add_child(new_label)
     if live_text_container.get_child_count() > log_history:
         live_text_container.get_children()[0].free()
@@ -179,8 +182,8 @@ func _submit_command() -> void:
     if expr.has_execute_failed():
         log_message("! ERROR: %s" % expr.get_error_text(), true)
 
-    if res != null:
-        command_output(res)
+    if res != null and not (res is GDScriptFunctionState):
+        command_output(str(res))
 
 
 func command_output(output) -> void:
@@ -227,6 +230,7 @@ func register_object(key: String, object) -> void:
 func welcome_message() -> void:
     command_output("Welcome to Godot's Debug Console :)")
     command_output("Call help() to see more commands.")
+    command_output("Press CTRL + F9 to disable the input field.")
     command_output("====================================")
 
 
