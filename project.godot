@@ -27,6 +27,8 @@ config/icon="res://icon.png"
 [autoload]
 
 DebugConsole="*res://DebugConsole.tscn"
+TargetableSignals="*res://TargetableSignals.gd"
+PlayerSignals="*res://PlayerSignals.gd"
 
 [input]
 
@@ -55,14 +57,9 @@ jump={
 "events": [ Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":0,"alt":false,"shift":false,"control":false,"meta":false,"command":false,"pressed":false,"scancode":32,"unicode":0,"echo":false,"script":null)
  ]
 }
-debug_toggle={
+lock_target={
 "deadzone": 0.5,
-"events": [ Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":0,"alt":false,"shift":false,"control":false,"meta":false,"command":false,"pressed":false,"scancode":16777252,"unicode":0,"echo":false,"script":null)
- ]
-}
-debug_submit_command={
-"deadzone": 0.5,
-"events": [ Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":0,"alt":false,"shift":false,"control":false,"meta":false,"command":false,"pressed":false,"scancode":16777221,"unicode":0,"echo":false,"script":null)
+"events": [ Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":0,"alt":false,"shift":false,"control":false,"meta":false,"command":false,"pressed":false,"scancode":16777218,"unicode":0,"echo":false,"script":null)
  ]
 }
 
@@ -70,6 +67,7 @@ debug_submit_command={
 
 3d_physics/layer_1="player"
 3d_physics/layer_2="world"
+3d_physics/layer_3="targetable"
 
 [physics]
 
