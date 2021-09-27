@@ -19,12 +19,45 @@ var max_distance
 
 var noise: OpenSimplexNoise
 var noise2: OpenSimplexNoise
+var tree_noise: OpenSimplexNoise
 var point_heights = {}
+
+var initialized: bool = false
 
 var material: Material = preload("res://material.tres")
 
+var tree: Mesh = preload("res://low_poly_tree.obj")
+var tree_meshinstance: MeshInstance
+var tree_bottom_material: Material = preload("res://tree_bottom_material.tres")
+var tree_top_material: Material = preload("res://tree_top_material.tres")
+
+var mesh_container: Spatial
+
+
+func init() -> void:
+    if initialized:
+        return
+
+    mesh_container = Spatial.new()
+    add_child(mesh_container)
+
+    tree.surface_set_material(0, tree_bottom_material)
+    tree.surface_set_material(1, tree_top_material)
+    tree_meshinstance = MeshInstance.new()
+    tree_meshinstance.mesh = tree;
+    tree_meshinstance.create_trimesh_collision()
+
+    initialized = true
+
+
+func clean() -> void:
+    for child in mesh_container.get_children():
+        child.free()
+
 
 func generate() -> void:
+    init()
+    clean()
     randomize()
 
     noise = OpenSimplexNoise.new()
@@ -38,6 +71,12 @@ func generate() -> void:
     noise2.octaves = 9
     #noise2.persistence = rand_range(0.25, 0.75)
     noise2.persistence = 0.5
+
+    tree_noise = OpenSimplexNoise.new()
+    tree_noise.seed = randi()
+    tree_noise.octaves = 9
+    #tree_noise.persistence = rand_range(0.25, 0.75)
+    tree_noise.persistence = 0.75
 
     DebugConsole.command_output(
         "Map Generated:\n" +
@@ -120,6 +159,13 @@ func _build_array_mesh() -> void:
                 normals_dict[triangles[(3 * t)]] = normals_dict.get(triangles[(3 * t)], []) + [tnormal]
                 normals_dict[triangles[(3 * t) + 1]] = normals_dict.get(triangles[(3 * t) + 1], []) + [tnormal]
                 normals_dict[triangles[(3 * t) + 2]] = normals_dict.get(triangles[(3 * t) + 2], []) + [tnormal]
+
+            if ((tree_noise.get_noise_2d(x, z) / 2.0) + .5) > .65 and noise_value > 1.2:
+                var tree_copy = tree_meshinstance.duplicate()
+                tree_copy.transform.origin = center_point
+                var tree_scale = rand_range(0.020, 0.040)
+                tree_copy.scale = Vector3(tree_scale, tree_scale, tree_scale)
+                mesh_container.add_child(tree_copy)
 
     for vector_point in normals_dict:
         var normal_avg = Vector3.ZERO

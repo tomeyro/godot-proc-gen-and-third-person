@@ -2,9 +2,9 @@
 
 [ext_resource path="res://ProceduralIsland.gd" type="Script" id=1]
 
-[sub_resource type="ArrayMesh" id=2]
+[sub_resource type="ArrayMesh" id=1]
 
-[sub_resource type="ImageTexture" id=1]
+[sub_resource type="ImageTexture" id=2]
 
 [node name="ProceduralIsland" type="Spatial"]
 script = ExtResource( 1 )
@@ -14,7 +14,7 @@ collision_layer = 2
 collision_mask = 0
 
 [node name="MeshInstance" type="MeshInstance" parent="StaticBody"]
-mesh = SubResource( 2 )
+mesh = SubResource( 1 )
 
 [node name="CollisionShape" type="CollisionShape" parent="StaticBody"]
 
@@ -27,4 +27,4 @@ __meta__ = {
 
 [node name="Sprite" type="Sprite" parent="Control"]
 position = Vector2( 10, 10 )
-texture = SubResource( 1 )
+texture = SubResource( 2 )
