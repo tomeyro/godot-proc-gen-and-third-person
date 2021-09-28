@@ -9,7 +9,7 @@ onready var noise_sprite: Sprite = $Control/Sprite
 
 export var map_size: float = 100
 export var map_outside: float = 50
-export var square_size: float = 3
+export var square_size: float = 5
 export var min_height: float = 1
 export var max_height: float = 100
 export var map_bottom: float = -30
@@ -111,35 +111,47 @@ func _build_array_mesh() -> void:
     var normals_dict = {}
     var normals_avgs = {}
 
-    var heights = []
-
     center = Vector2(map_size / 2.0, map_size / 2.0)
     max_distance = Vector2.ZERO.distance_squared_to(center)
+
+    var all_noises = {}
 
     for x in range(-map_outside, map_size + map_outside):
         for z in range(-map_outside, map_size + map_outside):
             var pos_x = x * square_size
             var pos_z = z * square_size
 
-            var noise_value = _get_noise_value(x, z)
+            var noise_value = all_noises.get(Vector2(x, z), _get_noise_value(x, z))
 
-            if not noise_value in heights:
-                heights.append(noise_value)
-
-            if noise_value == 0:
-                continue
-
-            var center_point = Vector3(pos_x + (square_size / 2), noise_value, pos_z + (square_size / 2))
-
+            var near_noises = []
             var avgs = []
             for set in [Vector2(-1, 1), Vector2(1, 1), Vector2(1, -1), Vector2(-1, -1)]:
                 var upd_x = set.y
                 var upd_z = set.x
 
-                var avg_noise = (
-                    noise_value + _get_noise_value(x, z + upd_z) + _get_noise_value(x + upd_x, z + upd_z) + _get_noise_value(x + upd_x, z)
-                ) / 4
+                var avg_noise = 0
+
+                for near_point in [Vector2(x, z + upd_z), Vector2(x + upd_x, z + upd_z), Vector2(x + upd_x, z)]:
+                    var near_noise = all_noises.get(near_point, _get_noise_value(near_point.x, near_point.y))
+                    all_noises[near_point] = near_noise
+                    avg_noise += near_noise
+                    near_noises.append(near_noise)
+
+                avg_noise = (avg_noise + noise_value) / 4
                 avgs.append(avg_noise)
+
+            var above_min_height = false
+            for near_point in near_noises:
+                if near_point >= min_height:
+                    above_min_height = true
+            if not above_min_height:
+                noise_value = map_bottom
+                for idx in range(len(avgs)):
+                    avgs[idx] = map_bottom
+
+            noise_value = (avgs[0] + avgs[1] + avgs[2] + avgs[3] + noise_value) / 5
+
+            var center_point = Vector3(pos_x + (square_size / 2), noise_value, pos_z + (square_size / 2))
 
             var top_right = Vector3(pos_x + square_size, avgs[0], pos_z)
             var bottom_right = Vector3(pos_x + square_size, avgs[1], pos_z + square_size)
@@ -160,7 +172,7 @@ func _build_array_mesh() -> void:
                 normals_dict[triangles[(3 * t) + 1]] = normals_dict.get(triangles[(3 * t) + 1], []) + [tnormal]
                 normals_dict[triangles[(3 * t) + 2]] = normals_dict.get(triangles[(3 * t) + 2], []) + [tnormal]
 
-            if ((tree_noise.get_noise_2d(x, z) / 2.0) + .5) > .65 and noise_value > 1.2:
+            if ((tree_noise.get_noise_2d(x, z) / 2.0) + .5) > .65 and noise_value > (min_height + 1):
                 var tree_copy = tree_meshinstance.duplicate()
                 tree_copy.transform.origin = center_point
                 var tree_scale = rand_range(0.020, 0.040)
@@ -186,6 +198,7 @@ func _build_array_mesh() -> void:
     array_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, array)
 
     array_mesh.surface_set_material(0, material)
+    material.next_pass.set_shader_param("min_height", min_height)
 
     mesh_instance.mesh = array_mesh
 
@@ -196,15 +209,19 @@ func _get_noise_value(x: float, z: float) -> float:
     if x < 0 or x >= map_size or z < 0 or z >= map_size:
         return map_bottom
 
-    var noise_value = (noise.get_noise_2d(x, z) / 2.0) + .5
     var distance = (Vector2(x, z).distance_squared_to(center) / max_distance)
+
+    if distance > .5:
+        return map_bottom
+
+    var noise_value = (noise.get_noise_2d(x, z) / 2.0) + .5
     noise_value = max(noise_value - distance, 0)
 
     var noise_mod = (noise2.get_noise_2d(x, z) / 2.0) + .5
     var height_diff = max_height - min_height
     noise_value = noise_value * (min_height + (height_diff * noise_mod))
 
-    return noise_value if noise_value != 0.0 else map_bottom
+    return noise_value if noise_value >= min_height else min_height
 
 
 func _get_triangle_normal(a, b, c):

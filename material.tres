@@ -5,11 +5,14 @@ code = "shader_type spatial;
 
 uniform vec4 color : hint_color = vec4(1.0);
 uniform float move : hint_range(0, 1) = 0.5;
+uniform float min_height = 1.0;
 
 varying float transparent;
 
 void vertex() {
-    VERTEX.y = VERTEX.y <= 1.0 ? 1.0 + (sin(TIME + VERTEX.x + VERTEX.z) * move) : 0.0;
+    VERTEX.y = (min_height - move) + (sin(TIME + VERTEX.x + VERTEX.z) * move);
+    VERTEX.x += (sin(TIME) * move);
+    VERTEX.z -= (sin(TIME) * move);
 }
 
 void fragment() {
@@ -19,8 +22,9 @@ void fragment() {
 
 [sub_resource type="ShaderMaterial" id=2]
 shader = SubResource( 1 )
-shader_param/color = Color( 0.0941176, 0.313726, 0.701961, 0.654902 )
+shader_param/color = Color( 0.0941176, 0.368627, 0.858824, 0.305882 )
 shader_param/move = 0.5
+shader_param/min_height = 1.0
 
 [sub_resource type="Shader" id=3]
 code = "shader_type spatial;
