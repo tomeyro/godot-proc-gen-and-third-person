@@ -18,8 +18,44 @@ shadow_enabled = true
 
 [node name="ProceduralIsland" parent="." instance=ExtResource( 3 )]
 
-[node name="Targetable" parent="." instance=ExtResource( 4 )]
+[node name="Targetables" type="Spatial" parent="."]
 
-[node name="Targetable2" parent="." instance=ExtResource( 4 )]
+[node name="Targetable" parent="Targetables" instance=ExtResource( 4 )]
 
-[node name="Targetable3" parent="." instance=ExtResource( 4 )]
+[node name="Targetable2" parent="Targetables" instance=ExtResource( 4 )]
+
+[node name="Targetable3" parent="Targetables" instance=ExtResource( 4 )]
+
+[node name="Targetable4" parent="Targetables" instance=ExtResource( 4 )]
+
+[node name="Targetable5" parent="Targetables" instance=ExtResource( 4 )]
+
+[node name="Targetable6" parent="Targetables" instance=ExtResource( 4 )]
+
+[node name="Targetable7" parent="Targetables" instance=ExtResource( 4 )]
+
+[node name="Targetable8" parent="Targetables" instance=ExtResource( 4 )]
+
+[node name="Targetable9" parent="Targetables" instance=ExtResource( 4 )]
+
+[node name="Targetable10" parent="Targetables" instance=ExtResource( 4 )]
+
+[node name="Targetable11" parent="Targetables" instance=ExtResource( 4 )]
+
+[node name="Targetable12" parent="Targetables" instance=ExtResource( 4 )]
+
+[node name="Targetable13" parent="Targetables" instance=ExtResource( 4 )]
+
+[node name="Targetable14" parent="Targetables" instance=ExtResource( 4 )]
+
+[node name="Targetable15" parent="Targetables" instance=ExtResource( 4 )]
+
+[node name="Targetable16" parent="Targetables" instance=ExtResource( 4 )]
+
+[node name="Targetable17" parent="Targetables" instance=ExtResource( 4 )]
+
+[node name="Targetable18" parent="Targetables" instance=ExtResource( 4 )]
+
+[node name="Targetable19" parent="Targetables" instance=ExtResource( 4 )]
+
+[node name="Targetable20" parent="Targetables" instance=ExtResource( 4 )]

@@ -20,6 +20,7 @@ export(float, 0, 90) var max_pitch: float = 50
 onready var player: KinematicBody = $Player
 onready var camera_pivot: Spatial = $CameraPivot
 onready var target_pivot: Spatial = $TargetPivot
+onready var target_checker: RayCast = $CameraPivot/CameraArm/Camera/TargetChecker
 
 
 var camera_y_rotation: float = 0.0
@@ -115,6 +116,11 @@ func check_targets() -> void:
     for target in targets_to_check:
         if player.global_transform.origin.distance_to(target.global_transform.origin) > targetable_distance:
             continue
+        if target != locked_target:
+            target_checker.cast_to = target_checker.to_local(target.global_transform.origin)
+            target_checker.force_raycast_update()
+            if target_checker.is_colliding():
+                continue
         targetable_targets.append(target)
     if locked_target and not (locked_target in targetable_targets):
         _unlock_target()

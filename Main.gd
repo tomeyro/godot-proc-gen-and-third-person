@@ -3,9 +3,7 @@ extends Spatial
 
 onready var island: ProceduralIsland = $ProceduralIsland
 onready var player = $PlayerController/Player
-onready var targetable = $Targetable
-onready var targetable2 = $Targetable2
-onready var targetable3 = $Targetable3
+onready var targetables = $Targetables
 
 
 func _ready() -> void:
@@ -30,6 +28,9 @@ func generate_island(size: float = 0, square_size: float = 0, max_height: float 
     if min_height > 0:
         island.min_height = min_height
     player.translation = Vector3(island.center.x * island.square_size, 100, island.center.y * island.square_size)
-    targetable.translation = player.translation + Vector3(10, 0, 10)
-    targetable2.translation = player.translation + Vector3(-10, 0, 10)
-    targetable3.translation = player.translation + Vector3(10, 0, -10)
+    var targetable_offset = Vector3(5, 0, 5)
+    var offset_multiplier = 1
+    for targetable in targetables.get_children():
+        targetable.translation = player.translation + (targetable_offset * offset_multiplier)
+        targetable_offset += Vector3(5, 0, 5)
+        offset_multiplier *= -1
