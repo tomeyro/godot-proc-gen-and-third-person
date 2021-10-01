@@ -1,0 +1,18 @@
+[gd_resource type="ShaderMaterial" load_steps=2 format=2]
+
+[sub_resource type="Shader" id=1]
+code = "shader_type spatial;
+
+uniform vec4 color : hint_color = vec4(1.0);
+uniform vec3 object_translation = vec3(0.0);
+uniform float distance_from_center = 0.0;
+
+void fragment() {
+    ALBEDO = color.rgb + (vec3(.1) * object_translation.y);
+}"
+
+[resource]
+shader = SubResource( 1 )
+shader_param/color = Color( 0.290196, 0.458824, 0.352941, 1 )
+shader_param/object_translation = Vector3( 0, 0, 0 )
+shader_param/distance_from_center = 0.0
