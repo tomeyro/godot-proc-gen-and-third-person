@@ -30,6 +30,7 @@ spring_length = 5.0
 
 [node name="Camera" type="Camera" parent="CameraPivot/CameraArm"]
 current = true
+far = 200.0
 
 [node name="TargetChecker" type="RayCast" parent="CameraPivot/CameraArm/Camera"]
 collision_mask = 2
