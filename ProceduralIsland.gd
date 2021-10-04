@@ -26,10 +26,7 @@ var initialized: bool = false
 
 var material: Material = preload("res://material.tres")
 
-var tree: Mesh = preload("res://low_poly_tree.obj")
-var tree_meshinstance: MeshInstance
-var tree_bottom_material: Material = preload("res://tree_bottom_material.tres")
-var tree_top_material: Material = preload("res://tree_top_material.tres")
+var tree: PackedScene = preload("res://tree.tscn")
 
 var mesh_container: Spatial
 
@@ -40,12 +37,6 @@ func init() -> void:
 
     mesh_container = Spatial.new()
     add_child(mesh_container)
-
-    tree.surface_set_material(0, tree_bottom_material)
-    tree.surface_set_material(1, tree_top_material)
-    tree_meshinstance = MeshInstance.new()
-    tree_meshinstance.mesh = tree;
-    tree_meshinstance.create_trimesh_collision()
 
     initialized = true
 
@@ -114,6 +105,10 @@ func _build_array_mesh() -> void:
     center = Vector2(map_size / 2.0, map_size / 2.0)
     max_distance = Vector2.ZERO.distance_squared_to(center)
 
+    var center_coords = center * square_size
+    material.set_shader_param("world_center", to_global(Vector3(center_coords.x, 0.0, center_coords.y)))
+    material.set_shader_param("max_height", max_height)
+
     var all_noises = {}
 
     for x in range(-map_outside, map_size + map_outside):
@@ -173,11 +168,11 @@ func _build_array_mesh() -> void:
                 normals_dict[triangles[(3 * t) + 2]] = normals_dict.get(triangles[(3 * t) + 2], []) + [tnormal]
 
             if ((tree_noise.get_noise_2d(x, z) / 2.0) + .5) > .65 and noise_value > (min_height + 1):
-                var tree_copy = tree_meshinstance.duplicate()
-                tree_copy.transform.origin = center_point
-                var tree_scale = rand_range(0.020, 0.040)
-                tree_copy.scale = Vector3(tree_scale, tree_scale, tree_scale)
-                mesh_container.add_child(tree_copy)
+                var tree_instance = tree.instance()
+                tree_instance.transform.origin = center_point
+                var tree_scale = rand_range(0.75, 1)
+                tree_instance.scale = Vector3(tree_scale, tree_scale, tree_scale)
+                mesh_container.add_child(tree_instance)
 
     for vector_point in normals_dict:
         var normal_avg = Vector3.ZERO
@@ -198,7 +193,6 @@ func _build_array_mesh() -> void:
     array_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, array)
 
     array_mesh.surface_set_material(0, material)
-    material.next_pass.set_shader_param("min_height", min_height)
 
     mesh_instance.mesh = array_mesh
 

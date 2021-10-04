@@ -1,4 +1,27 @@
-[gd_resource type="SpatialMaterial" format=2]
+[gd_resource type="ShaderMaterial" load_steps=2 format=2]
+
+[sub_resource type="Shader" id=1]
+code = "shader_type spatial;
+//render_mode unshaded;
+
+uniform vec4 color: hint_color = vec4(1.0);
+
+uniform float move = 0.1;
+
+varying float y;
+
+void vertex() {
+    VERTEX.x += sin(TIME) * move * VERTEX.y;
+    VERTEX.z += sin(TIME) * move * VERTEX.y;
+    
+    y = VERTEX.y;
+}
+
+void fragment() {
+    ALBEDO = color.rgb + (vec3(.05) * y);
+}"
 
 [resource]
-albedo_color = Color( 0.666667, 0.643137, 0.396078, 1 )
+shader = SubResource( 1 )
+shader_param/color = Color( 0.137255, 0.392157, 0.121569, 1 )
+shader_param/move = 0.1

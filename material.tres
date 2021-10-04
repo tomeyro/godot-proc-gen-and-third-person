@@ -1,62 +1,33 @@
-[gd_resource type="ShaderMaterial" load_steps=4 format=2]
-
-[sub_resource type="Shader" id=1]
-code = "shader_type spatial;
-
-uniform vec4 color : hint_color = vec4(1.0);
-uniform float move : hint_range(0, 1) = 0.5;
-uniform float min_height = 1.0;
-
-varying float transparent;
-
-void vertex() {
-    VERTEX.y = (min_height - move) + (sin(TIME + VERTEX.x + VERTEX.z) * move);
-    VERTEX.x += (sin(TIME) * move);
-    VERTEX.z -= (sin(TIME) * move);
-}
-
-void fragment() {
-    ALBEDO = vec3(color.r, color.g, color.b);
-    ALPHA = color.a;
-}"
-
-[sub_resource type="ShaderMaterial" id=2]
-shader = SubResource( 1 )
-shader_param/color = Color( 0.0941176, 0.368627, 0.858824, 0.305882 )
-shader_param/move = 0.5
-shader_param/min_height = 1.0
+[gd_resource type="ShaderMaterial" load_steps=2 format=2]
 
 [sub_resource type="Shader" id=3]
 code = "shader_type spatial;
 
-uniform vec4 color : hint_color;
+uniform vec4 color : hint_color = vec4(1.0);
 
-varying vec3 actual_color;
+uniform vec3 world_center = vec3(0.0);
+uniform float max_height = 1.0;
+
+varying float xz;
+varying float y;
+
+float distance_to(vec3 vec_from, vec3 vec_to) {
+    return sqrt(pow(vec_from.x - vec_to.x, 2.0) + pow(vec_from.z - vec_to.z, 2.0));
+}
 
 void vertex() {
-    actual_color = vec3(color.r, color.g, color.b);
-    if (VERTEX.y > 30.0) {
-        actual_color += vec3(0.4);
-    }
-    else if (VERTEX.y > 20.0) {
-        actual_color += vec3(0.3);
-    }
-    else if (VERTEX.y > 10.0) {
-        actual_color += vec3(0.2);
-    }
-    else if (VERTEX.y > 1.0) {
-        actual_color += vec3(0.1);
-    }
-    else if (VERTEX.y < 1.0) {
-        actual_color = vec3(.3);
-    }
+    vec3 world_pos = VERTEX;
+    xz = distance_to(world_pos, world_center) / distance_to(vec3(0.0), world_center);
+    y = world_pos.y / max_height;
+    
 }
 
 void fragment() {
-    ALBEDO = actual_color;
+    ALBEDO = color.rgb + (vec3(.2) * y) - (vec3(.3) * xz);
 }"
 
 [resource]
-next_pass = SubResource( 2 )
 shader = SubResource( 3 )
 shader_param/color = Color( 0.215686, 0.380392, 0.243137, 1 )
+shader_param/world_center = Vector3( 0, 0, 0 )
+shader_param/max_height = 1.0

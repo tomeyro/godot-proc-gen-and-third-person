@@ -18,9 +18,7 @@ onready var player = $PlayerController/Player
 onready var hex_land: Material = preload("res://hex_land.tres")
 onready var hex_water: Material = preload("res://hex_water.tres")
 
-onready var tree: Mesh = preload("res://low_poly_tree.obj")
-onready var tree_bottom_material: Material = preload("res://tree_bottom_material.tres")
-onready var tree_top_material: Material = preload("res://tree_top_material.tres")
+onready var tree: PackedScene = preload("res://tree.tscn")
 
 
 var noise: OpenSimplexNoise
@@ -37,17 +35,10 @@ var center: Vector2
 var max_distance: float
 var height_diff: float
 
-var tree_meshinstance: MeshInstance
 
 
 func _ready() -> void:
     remove_child(hex)
-
-    tree.surface_set_material(0, tree_bottom_material)
-    tree.surface_set_material(1, tree_top_material)
-    tree_meshinstance = MeshInstance.new()
-    tree_meshinstance.mesh = tree;
-    tree_meshinstance.create_trimesh_collision()
 
     _generate()
 
@@ -90,10 +81,19 @@ func _compute_vars() -> void:
     height_diff = max_height - min_height
 
 
+func get_translation_for_hex_position(x: int, z: int) -> Vector3:
+    var odd_x = x % 2 != 0
+    var hex_offset = Vector3(hex_half_radius * x, 0.0, hex_apothem if odd_x else 0.0)
+    var hex_position = Vector3(x, 0, z) * Vector3(hex_long_diagonal, 1.0, hex_short_diagonal)
+    var hex_translation = hex_position - hex_offset
+    return hex_translation
+
+
 func _create_world() -> void:
     var world_range = range(-half_world_size, world_size + half_world_size)
+    var center_translation = get_translation_for_hex_position(center.x, center.y)
+
     for x in world_range:
-        var odd_x = x % 2 != 0
         for z in world_range:
             var distance = (Vector2(x, z).distance_squared_to(center) / max_distance)
             var actual_distance = distance
@@ -103,27 +103,26 @@ func _create_world() -> void:
             var noise_value = max((noise.get_noise_2d(x, z) / 2.0) + .5 - distance, 0)
             var y = min_height + round(height_diff * noise_value)
 
-            var hex_offset = Vector3(hex_half_radius * x, 0.0, hex_apothem if odd_x else 0.0)
-            var hex_position = Vector3(x, 0, z) * Vector3(hex_long_diagonal, 1.0, hex_short_diagonal)
-            var hex_translation = hex_position - hex_offset
+            var hex_translation = get_translation_for_hex_position(x, z)
 
             for loop_y in range(min_height, y + 1):
                 var new_hex = hex.duplicate()
                 new_hex.translation = hex_translation + Vector3(0, loop_y, 0)
                 var material: ShaderMaterial = (hex_land if loop_y > min_height else hex_water).duplicate()
-                material.set_shader_param("object_translation", new_hex.translation)
-                material.set_shader_param("distance_from_center", actual_distance)
-                new_hex.get_node("Circle").material_override = material
+                material.set_shader_param("object_translation", hex_container.to_global(new_hex.translation))
+                material.set_shader_param("world_center", hex_container.to_global(center_translation))
+                material.set_shader_param("max_height", max_height)
+                new_hex.get_node("Hexagon").material_override = material
                 hex_container.add_child(new_hex)
 
             if y > min_height:
                 var tree_noise_value = (tree_noise.get_noise_2d(x, z) / 2.0) + .5
-                if tree_noise_value > 0.55:
-                    var tree_copy = tree_meshinstance.duplicate()
-                    tree_copy.transform.origin = hex_translation + Vector3(0, y, 0)
-                    var tree_scale = rand_range(0.020, 0.040)
-                    tree_copy.scale = Vector3(tree_scale, tree_scale, tree_scale)
-                    hex_container.add_child(tree_copy)
+                if tree_noise_value > 0.65:
+                    var tree_instance = tree.instance()
+                    tree_instance.transform.origin = hex_translation + Vector3(0, y, 0)
+                    var tree_scale = rand_range(0.75, 1.0)
+                    tree_instance.scale = Vector3(tree_scale, tree_scale, tree_scale)
+                    hex_container.add_child(tree_instance)
 
 
 func _position_player() -> void:

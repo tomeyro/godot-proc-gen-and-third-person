@@ -2,17 +2,35 @@
 
 [sub_resource type="Shader" id=1]
 code = "shader_type spatial;
+render_mode unshaded;
 
 uniform vec4 color : hint_color = vec4(1.0);
-uniform vec3 object_translation = vec3(0.0);
-uniform float distance_from_center = 0.0;
+
+uniform vec3 object_translation = vec3(1.0);
+uniform vec3 world_center = vec3(0.0);
+uniform float max_height = 1.0;
+
+varying float xz;
+varying float y;
+
+float distance_to(vec3 vec_from, vec3 vec_to) {
+    return sqrt(pow(vec_from.x - vec_to.x, 2.0) + pow(vec_from.z - vec_to.z, 2.0));
+}
+
+void vertex() {
+    vec3 world_pos = object_translation - VERTEX;
+    xz = distance_to(world_pos, world_center) / distance_to(vec3(0.0), world_center);
+    y = world_pos.y / max_height;
+    
+}
 
 void fragment() {
-    ALBEDO = color.rgb + (vec3(.1) * object_translation.y);
+    ALBEDO = color.rgb + (vec3(.1) * y) - (vec3(.3) * xz);
 }"
 
 [resource]
 shader = SubResource( 1 )
 shader_param/color = Color( 0.290196, 0.458824, 0.352941, 1 )
 shader_param/object_translation = Vector3( 0, 0, 0 )
-shader_param/distance_from_center = 0.0
+shader_param/world_center = Vector3( 0, 0, 0 )
+shader_param/max_height = 1.0

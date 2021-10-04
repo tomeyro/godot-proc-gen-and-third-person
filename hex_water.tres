@@ -3,14 +3,27 @@
 [sub_resource type="Shader" id=1]
 resource_local_to_scene = true
 code = "shader_type spatial;
+render_mode unshaded;
 
-uniform float move = 0.5;
+uniform float move = 0.75;
 uniform vec4 color : hint_color = vec4(1.0);
+
+uniform vec3 world_center = vec3(0.0);
 uniform vec3 object_translation = vec3(0.0);
-uniform float distance_from_center = 0.0;
+
+varying float distance_from_center;
+
+float distance_to(vec3 vec_from, vec3 vec_to) {
+    return sqrt(pow(vec_from.x - vec_to.x, 2.0) + pow(vec_from.z - vec_to.z, 2.0));
+}
 
 void vertex() {
-    VERTEX.y += abs(sin(TIME + VERTEX.x + VERTEX.z + object_translation.x + object_translation.z)) * move;
+    vec3 world_pos = object_translation + VERTEX;
+    
+    distance_from_center = distance_to(world_pos, world_center) / distance_to(vec3(0.0), world_center);
+    
+    
+    VERTEX.y += abs(sin(TIME + world_pos.x) * cos(TIME + world_pos.z)) * move;
 }
 
 void fragment() {
@@ -21,5 +34,5 @@ void fragment() {
 shader = SubResource( 1 )
 shader_param/move = 0.5
 shader_param/color = Color( 0.141176, 0.513726, 0.784314, 1 )
+shader_param/world_center = Vector3( 0, 0, 0 )
 shader_param/object_translation = Vector3( 0, 0, 0 )
-shader_param/distance_from_center = 0.0
