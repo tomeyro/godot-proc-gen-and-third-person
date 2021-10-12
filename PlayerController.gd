@@ -7,6 +7,7 @@ export var air_acceleration: float = 5
 export var gravity: float = 75
 export var max_fall_speed: float = 50
 export var jump_force: float = 20
+export var fly_mode: bool = false
 
 export var targetable_distance: float = 40
 export var hold_to_unlock: float = 0.5
@@ -82,6 +83,10 @@ func _physics_process(delta: float) -> void:
     movement += camera_pivot.transform.basis.x * (Input.get_action_strength("move_right") - Input.get_action_strength("move_left"))
     movement = movement.normalized()
 
+    if fly_mode:
+        gravity = 0
+        movement.y = Input.get_action_strength("fly_up") - Input.get_action_strength("fly_down")
+
     if (not is_zero_approx(movement.x) or not is_zero_approx(movement.z) or locked_target) and not is_equal_approx(player.rotation_degrees.y, rotate_on.rotation_degrees.y):
         player.rotation_degrees.y = rad2deg(lerp_angle(deg2rad(player.rotation_degrees.y), deg2rad(rotate_on.rotation_degrees.y), 10 * delta))
 
@@ -89,15 +94,16 @@ func _physics_process(delta: float) -> void:
 
     velocity = velocity.linear_interpolate(movement * speed, accel * delta)
 
-    #if is_on_floor() and Input.is_action_just_pressed("jump"):
-    if Input.is_action_just_pressed("jump"):
-        y_velocity = jump_force
-    elif player.is_on_floor():
-        y_velocity = -.001
-    else:
-        y_velocity = max(y_velocity - (gravity * delta), -max_fall_speed)
+    if not fly_mode:
+        #if is_on_floor() and Input.is_action_just_pressed("jump"):
+        if Input.is_action_just_pressed("jump"):
+            y_velocity = jump_force
+        elif player.is_on_floor():
+            y_velocity = -.001
+        else:
+            y_velocity = max(y_velocity - (gravity * delta), -max_fall_speed)
 
-    velocity.y = y_velocity
+        velocity.y = y_velocity
 
     if y_velocity > 0 or not player.is_on_floor():
         velocity = player.move_and_slide(velocity, Vector3.UP)
