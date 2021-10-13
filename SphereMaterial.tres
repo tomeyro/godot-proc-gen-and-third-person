@@ -9,7 +9,7 @@ uniform vec4 color : hint_color = vec4(1);
 
 void fragment() {
     ALBEDO = color.rgb;
-    ALPHA = color.a;
+    //ALPHA = color.a;
 }"
 
 [resource]
